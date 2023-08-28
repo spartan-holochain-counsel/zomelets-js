@@ -1,0 +1,33 @@
+{
+  "name": "@spartan-hc/zomelets",
+  "version": "0.1.0",
+  "description": "Tools for implementing the Zomelet specification in Javascript",
+  "type": "module",
+  "main": "src/index.js",
+  "module": "src/index.js",
+  "browser": "dist/holochain-zomelets.js",
+  "files": [
+    "README.md",
+    "src/index.js",
+    "src/utils.js",
+    "src/base_classes.js",
+    "dist/**"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Matthew Brisebois <matthew@webheroes.ca>",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/spartan-holochain-counsel/zomelets-js/"
+  },
+  "devDependencies": {
+    "@whi/json": "^0.1.7",
+    "@whi/weblogger": "^0.1.6",
+    "chai": "^4.3.4",
+    "mocha": "^10.1.0",
+    "webpack": "^5.76.3",
+    "webpack-cli": "^4.7.2"
+  }
+}
