@@ -149,6 +149,8 @@ export class CellZomelets extends Interface {
 
 	super( "Cell", options );
 
+	// TODO: should validate the config structure
+
 	for ( let [name, handler] of Object.entries( config ) ) {
 	    this.setZomelet( name, handler );
 	}
@@ -167,7 +169,8 @@ utils.set_tostringtag( CellZomelets, "CellZomelets" );
 
 export class Zomelet extends Interface {
     #handlers				= {};
-    #peers				= {};
+    #zomes				= {};
+    #cells				= {};
 
     constructor ( config, options ) {
 	if ( arguments[0]?.constructor?.name === "Zomelet" )
@@ -175,13 +178,21 @@ export class Zomelet extends Interface {
 
 	super( "Zome", options );
 
+	// TODO: should validate the config structure
+
 	for ( let [name, handler] of Object.entries( config ) ) {
 	    this.setFunction( name, handler );
 	}
 
-	if ( options?.peers ) {
-	    for ( let [name, zomelet] of Object.entries( options.peers ) ) {
-		this.setPeer( name, zomelet );
+	if ( options?.zomes ) {
+	    for ( let [name, zomelet] of Object.entries( options.zomes ) ) {
+		this.setPeerZome( name, zomelet );
+	    }
+	}
+
+	if ( options?.cells ) {
+	    for ( let [role_name, cell_spec] of Object.entries( options.cells ) ) {
+		this.setPeerCell( role_name, cell_spec );
 	    }
 	}
     }
@@ -190,16 +201,24 @@ export class Zomelet extends Interface {
 	return Object.assign( {}, this.#handlers );
     }
 
-    get peers () {
-	return Object.assign( {}, this.#peers );
+    get zomes () {
+	return Object.assign( {}, this.#zomes );
+    }
+
+    get cells () {
+	return Object.assign( {}, this.#cells );
     }
 
     setFunction ( name, handler ) {
 	this.#handlers[ name ]		= normalizeFunctionHandler( name, handler );
     }
 
-    setPeer ( name, zomelet ) {
-	this.#peers[ name ]		= zomelet;
+    setPeerZome ( name, zomelet ) {
+	this.#zomes[ name ]		= new Zomelet( zomelet );
+    }
+
+    setPeerCell ( name, cell_spec ) {
+	this.#cells[ name ]		= new CellZomelets( cell_spec );
     }
 }
 utils.set_tostringtag( Zomelet, "Zomelet" );
