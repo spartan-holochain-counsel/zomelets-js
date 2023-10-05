@@ -24,10 +24,12 @@
   },
   "devDependencies": {
     "@whi/json": "^0.1.7",
-    "@whi/weblogger": "^0.1.6",
     "chai": "^4.3.4",
     "mocha": "^10.1.0",
     "webpack": "^5.76.3",
     "webpack-cli": "^4.7.2"
+  },
+  "dependencies": {
+    "@whi/weblogger": "^0.2.0"
   }
 }
