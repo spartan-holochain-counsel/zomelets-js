@@ -49,14 +49,18 @@ export class Transformer extends Base {
 	if ( !this.has_input_transformer )
 	    throw new Error(`Transformer ${this.name} does not have an input transformer`);
 
-	return await this.#input_fn( input ) || input;
+	const result			= await this.#input_fn( input );
+
+	return result === undefined ? output : result;
     }
 
     async transformOutput ( output ) {
 	if ( !this.has_output_transformer )
 	    throw new Error(`Transformer ${this.name} does not have an output transformer`);
 
-	return await this.#output_fn( output ) || output;
+	const result			= await this.#output_fn( output );
+
+	return result === undefined ? output : result;
     }
 }
 utils.set_tostringtag( Transformer, "Transformer" );
