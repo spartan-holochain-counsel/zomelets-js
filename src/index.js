@@ -51,7 +51,7 @@ export class Transformer extends Base {
 
 	const result			= await this.#input_fn( input );
 
-	return result === undefined ? output : result;
+	return result === undefined ? input : result;
     }
 
     async transformOutput ( output ) {
@@ -175,8 +175,9 @@ export class Zomelet extends Interface {
     #handlers				= {};
     #zomes				= {};
     #cells				= {};
+    #virtual_cells			= {};
 
-    constructor ( config, options ) {
+    constructor ( config = {}, options ) {
 	if ( arguments[0]?.constructor?.name === "Zomelet" )
 	    return arguments[0];
 
@@ -199,6 +200,14 @@ export class Zomelet extends Interface {
 		this.setPeerCell( role_name, cell_spec );
 	    }
 	}
+
+	if ( options?.virtual ) {
+	    if ( options.virtual.cells ) {
+		for ( let [role_name, cell_spec] of Object.entries( options.virtual.cells ) ) {
+		    this.setVirtualPeerCell( role_name, cell_spec );
+		}
+	    }
+	}
     }
 
     get handlers () {
@@ -213,6 +222,10 @@ export class Zomelet extends Interface {
 	return Object.assign( {}, this.#cells );
     }
 
+    get virtual_cells () {
+	return Object.assign( {}, this.#virtual_cells );
+    }
+
     setFunction ( name, handler ) {
 	this.#handlers[ name ]		= normalizeFunctionHandler( name, handler );
     }
@@ -223,6 +236,10 @@ export class Zomelet extends Interface {
 
     setPeerCell ( name, cell_spec ) {
 	this.#cells[ name ]		= new CellZomelets( cell_spec );
+    }
+
+    setVirtualPeerCell ( name, cell_spec ) {
+	this.#virtual_cells[ name ]	= new CellZomelets( cell_spec );
     }
 }
 utils.set_tostringtag( Zomelet, "Zomelet" );
