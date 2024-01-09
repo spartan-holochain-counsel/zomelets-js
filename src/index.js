@@ -144,20 +144,45 @@ export class Interface extends Base {
 utils.set_tostringtag( Interface, "Interface" );
 
 
+function normalizeCellZomeletInput ( ...args ) {
+    if ( "interfaces" in args[0] ) {
+	return [
+            args[0].interfaces,
+            args[0].transformers || [],
+            args[0].options || {},
+	];
+    }
+
+    return [
+	args[0],
+	args[1] || [],
+	args[2] || {},
+    ];
+}
+
+
 export class CellZomelets extends Interface {
     #zomes				= {};
 
-    constructor ( config = {}, options ) {
+    constructor ( ...args ) {
 	if ( arguments[0]?.constructor?.name === "CellZomelets" )
 	    return arguments[0];
+
+	const [
+	    interfaces,
+	    transformers,
+	    options,
+	]				= normalizeCellZomeletInput( ...args );
 
 	super( "Cell", options );
 
 	// TODO: should validate the config structure
 
-	for ( let [name, handler] of Object.entries( config ) ) {
+	for ( let [name, handler] of Object.entries( interfaces ) ) {
 	    this.setZomelet( name, handler );
 	}
+
+	this.addTransformers( transformers );
     }
 
     get zomes () {
@@ -171,47 +196,85 @@ export class CellZomelets extends Interface {
 utils.set_tostringtag( CellZomelets, "CellZomelets" );
 
 
+function normalizeZomeletInput ( ...args ) {
+    if ( "functions" in args[0] ) {
+	return [
+            args[0].functions,
+            args[0].dependencies || null,
+            args[0].transformers || [],
+            args[0].signals || {},
+            args[0].options || {},
+	];
+    }
+
+    return [
+	args[0],
+	args[1] || null,
+	args[2] || [],
+	args[3] || {},
+	args[4] || {},
+    ];
+}
+
+
 export class Zomelet extends Interface {
-    #handlers				= {};
+    #functions				= {};
     #zomes				= {};
     #cells				= {};
+    #signals				= {};
     #virtual_cells			= {};
 
-    constructor ( config = {}, options ) {
+    constructor ( ...args ) {
 	if ( arguments[0]?.constructor?.name === "Zomelet" )
 	    return arguments[0];
+
+	const [
+	    functions,
+	    dependencies,
+	    transformers,
+	    signals,
+	    options,
+	]				= normalizeZomeletInput( ...args );
 
 	super( "Zome", options );
 
 	// TODO: should validate the config structure
 
-	for ( let [name, handler] of Object.entries( config ) ) {
+	for ( let [name, handler] of Object.entries( functions ) ) {
 	    this.setFunction( name, handler );
 	}
 
-	if ( options?.zomes ) {
-	    for ( let [name, zomelet] of Object.entries( options.zomes ) ) {
+	if ( dependencies?.zomes ) {
+	    for ( let [name, zomelet] of Object.entries( dependencies.zomes ) ) {
 		this.setPeerZome( name, zomelet );
 	    }
 	}
 
-	if ( options?.cells ) {
-	    for ( let [role_name, cell_spec] of Object.entries( options.cells ) ) {
+	if ( dependencies?.cells ) {
+	    for ( let [role_name, cell_spec] of Object.entries( dependencies.cells ) ) {
 		this.setPeerCell( role_name, cell_spec );
 	    }
 	}
 
-	if ( options?.virtual ) {
-	    if ( options.virtual.cells ) {
-		for ( let [role_name, cell_spec] of Object.entries( options.virtual.cells ) ) {
+	if ( dependencies?.virtual ) {
+	    if ( dependencies.virtual.cells ) {
+		for ( let [role_name, cell_spec] of Object.entries( dependencies.virtual.cells ) ) {
 		    this.setVirtualPeerCell( role_name, cell_spec );
 		}
 	    }
 	}
+
+	if ( signals ) {
+	    for ( let [name, handler] of Object.entries( signals ) ) {
+		this.setSignalHandler( name, handler );
+	    }
+	}
+
+	this.addTransformers( transformers );
     }
 
-    get handlers () {
-	return Object.assign( {}, this.#handlers );
+    get functions () {
+	return Object.assign( {}, this.#functions );
     }
 
     get zomes () {
@@ -226,8 +289,12 @@ export class Zomelet extends Interface {
 	return Object.assign( {}, this.#virtual_cells );
     }
 
+    get signals () {
+	return Object.assign( {}, this.#signals );
+    }
+
     setFunction ( name, handler ) {
-	this.#handlers[ name ]		= normalizeFunctionHandler( name, handler );
+	this.#functions[ name ]		= normalizeFunctionHandler( name, handler );
     }
 
     setPeerZome ( name, zomelet ) {
@@ -241,18 +308,31 @@ export class Zomelet extends Interface {
     setVirtualPeerCell ( name, cell_spec ) {
 	this.#virtual_cells[ name ]	= new CellZomelets( cell_spec );
     }
+
+    setSignalHandler ( name, handler ) {
+	this.#signals[ name ]		= handler;
+    }
 }
 utils.set_tostringtag( Zomelet, "Zomelet" );
 
 
-function noop_handler ( args ) {
-    return this.call( args );
+function noop_handler ( ...args ) {
+    return this.call( ...args );
+}
+
+function forwarder_handler ( fn_name ) {
+    return function ( ...args ) {
+	return this.functions[ fn_name ]( ...args );
+    };
 }
 
 function normalizeFunctionHandler ( name, handler ) {
     // log.trace("Zome function '%s' handler input:", name, handler );
     if ( handler === true )
 	return noop_handler;
+
+    if ( typeof handler === "string" )
+	return forwarder_handler( handler );
 
     if ( typeof handler === "function" )
 	return handler;

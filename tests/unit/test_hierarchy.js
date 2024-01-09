@@ -23,7 +23,7 @@ function basic_tests () {
 	    },
 	});
 
-	expect( zome_spec.handlers	).to.have.keys( "some_zome_fn" );
+	expect( zome_spec.functions	).to.have.keys( "some_zome_fn" );
     });
 
     it("should create cell interface", async function () {
@@ -38,6 +38,29 @@ function basic_tests () {
 
 	expect( cell_spec.zomes		).to.have.keys( "zome_01", "zome_02" );
 	expect( cell_spec.zomes.zome_01	).to.equal( zome_spec );
+    });
+
+    it("should set signal handlers", async function () {
+	zome_spec			= new Zomelet({
+	    "functions": {
+		some_zome_fn ( args ) {
+		    return this.call( args );
+		},
+	    },
+	    "signals": {
+		SomeSignal ( message ) {
+		    return message;
+		},
+	    },
+	});
+
+	{
+	    const resp			= zome_spec.signals.SomeSignal( "hello" );
+
+	    expect( resp		).to.equal( "hello" );
+	}
+
+	expect( zome_spec.signals	).to.have.keys( "SomeSignal" );
     });
 
 }
